@@ -1,20 +1,20 @@
 #!/bin/bash
 
-set -o pipefail
-set -o errexit
-set -o errtrace
-set -o nounset
+# set -o pipefail
+# set -o errexit
+# set -o errtrace
+# set -o nounset
 # set -o xtrace
 
 BACKUP_DIR=${BACKUP_DIR:-/tmp/scstemp}
 BOTO_CONFIG_PATH=${BOTO_CONFIG_PATH:-/root/.boto}
 GCS_BUCKET=${GCS_BUCKET:-}
 GCS_KEY_FILE_PATH=${GCS_KEY_FILE_PATH:-}
-MONGODB_HOST=${MONGODB_HOST:-localhost}
-MONGODB_PORT=${MONGODB_PORT:-27017}
-MONGODB_DB=${MONGODB_DB:-}
-MONGODB_USER=${MONGODB_USER:-stbProd}
-MONGODB_PASSWORD=${MONGODB_PASSWORD:-xxxxxxxxxxx}
+MYSQL_HOST=${MYSQL_HOST:-0.0.0.0}
+MYSQL_PORT=${MYSQL_PORT:-33060}
+MYSQL_DB=${MYSQL_DB:-some-sql}
+MYSQL_USER=${MYSQL_USER:-root}
+MYSQL_PASSWORD=${MYSQL_PASSWORD:-root}
 MONGODB_OPLOG=${MONGODB_OPLOG:-true}
 
 backup() {
@@ -22,27 +22,34 @@ backup() {
   date=$(date "+%Y-%m-%dT%H:%M:%SZ")
   archive_name="backup-$date.tar.gz"
 
-  cmd_auth_part=""
-  if [[ ! -z $MONGODB_USER ]] && [[ ! -z $MONGODB_PASSWORD ]]
-  then
-    cmd_auth_part="--username=\"$MONGODB_USER\" --password=\"$MONGODB_PASSWORD\""
-  fi
+#   cmd_auth_part=""
+#   if [[ ! -z $MONGODB_USER ]] && [[ ! -z $MONGODB_PASSWORD ]]
+#   then
+#     cmd_auth_part="--username=\"$MONGODB_USER\" --password=\"$MONGODB_PASSWORD\""
+#   fi
 
-  cmd_db_part=""
-  if [[ ! -z $MONGODB_DB ]]
-  then
-    cmd_db_part="--db=\"$MONGODB_DB\""
-  fi
+#   cmd_db_part=""
+#   if [[ ! -z $MONGODB_DB ]]
+#   then
+#     cmd_db_part="--db=\"$MONGODB_DB\""
+#   fi
 
-  cmd_oplog_part=""
-  if [[ $MONGODB_OPLOG = "true" ]]
-  then
-    cmd_oplog_part="--oplog"
-  fi
+#   cmd_oplog_part=""
+#   if [[ $MONGODB_OPLOG = "true" ]]
+#   then
+#     cmd_oplog_part="--oplog"
+#   fi
 
-  cmd="mongodump --host=\"$MONGODB_HOST\" --port=\"$MONGODB_PORT\" $cmd_auth_part $cmd_db_part $cmd_oplog_part --gzip --archive=$BACKUP_DIR/$archive_name"
+  #cmd="mysql -h\"$MYSQL_HOST\" -P\"$MYSQL_PORT\" $cmd_auth_part $cmd_db_part $cmd_oplog_part --gzip --archive=$BACKUP_DIR/$archive_name"
+  #cmd="mysql -h\"$MYSQL_HOST\" -P\"$MYSQL_PORT\" $cmd_auth_part $cmd_db_part $cmd_oplog_part --gzip --archive=$BACKUP_DIR/$archive_name"
+  cmd="docker exec -it some-mysql mysqldump -h ${MYSQL_HOST} \
+   -P${MYSQL_PORT} \
+   -u${MYSQL_USER} \
+   -p${MYSQL_PASSWORD} \
+   ${DATABASE_NAME} | gzip > ${archive_name}"
+
   echo "$cmd"
-  echo "starting to backup MongoDB host=$MONGODB_HOST port=$MONGODB_PORT"
+  echo "starting to backup MYSQL database host=$MYSQL_HOST port=$MYSQL_PORT"
   eval "$cmd"
 }
 
@@ -66,7 +73,7 @@ backup() {
 # }
 
 err() {
-  err_msg="Something went wrong on line $(caller)"
+  err_msg="something went wrong on line $(caller)"
   echo $err_msg >&2
 }
 
