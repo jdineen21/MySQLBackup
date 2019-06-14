@@ -11,11 +11,11 @@ BOTO_CONFIG_PATH=${BOTO_CONFIG_PATH:-/root/.boto}
 GCS_BUCKET=${GCS_BUCKET:-}
 GCS_KEY_FILE_PATH=${GCS_KEY_FILE_PATH:-}
 
-MYSQL_HOST=${MYSQL_HOST:-0.0.0.0}
-MYSQL_PORT=${MYSQL_PORT:-3306}
-MYSQL_DB=${MYSQL_DB:-tobackup}
-MYSQL_USER=${MYSQL_USER:-root}
-MYSQL_PASSWORD=${MYSQL_PASSWORD:-root}
+PSQL_HOST=${PSQL_HOST:-0.0.0.0}
+PSQL_PORT=${PSQL_PORT:-5432}
+PSQL_DB=${PSQL_DB:-tobackup}
+PSQL_USER=${PSQL_USER:-root}
+PSQL_PASSWORD=${PSQL_PASSWORD:-root}
 
 MONGODB_OPLOG=${MONGODB_OPLOG:-true}
 
@@ -44,14 +44,14 @@ backup() {
 
   #cmd="mysql -h\"$MYSQL_HOST\" -P\"$MYSQL_PORT\" $cmd_auth_part $cmd_db_part $cmd_oplog_part --gzip --archive=$BACKUP_DIR/$archive_name"
   #cmd="mysql -h\"$MYSQL_HOST\" -P\"$MYSQL_PORT\" $cmd_auth_part $cmd_db_part $cmd_oplog_part --gzip --archive=$BACKUP_DIR/$archive_name"
-  cmd="mysqldump -h${MYSQL_HOST} \
-   -P${MYSQL_PORT} \
-   -u${MYSQL_USER} \
-   -p${MYSQL_PASSWORD} \
-   ${MYSQL_DB} | gzip > ${archive_name}"
+  cmd="pg_dump -h${PSQL_HOST} \
+   -p${PSQL_PORT} \
+   -U${PSQL_USER} \
+   -P${PSQL_PASSWORD} \
+   ${PSQL_DB} | gzip > ${archive_name}"
 
   echo "$cmd"
-  echo "starting to backup MYSQL database host=$MYSQL_HOST port=$MYSQL_PORT"
+  echo "starting to backup Postgres database host=$MYSQL_HOST port=$MYSQL_PORT"
   eval "$cmd"
 }
 
